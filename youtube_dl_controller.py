@@ -1,5 +1,9 @@
-from PyQt5 import QtWidgets, uic
 import sys
+
+from PyQt5 import QtWidgets, uic
+from PyQt5.QtCore import QThread
+
+from worker import Worker
 
 
 class UIContoller(QtWidgets.QDialog):
@@ -11,7 +15,20 @@ class UIContoller(QtWidgets.QDialog):
         self.show()
 
     def on_button_pressed_handle(self):
-        self.label.setText(self.lineEdit.text())
+        self.worker = Worker()
+        self.thread = QThread()
+        print("HI")
+        self.worker.current_progress.connect(self.progressbar_updater)
+
+        self.worker.moveToThread(self.thread)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(sys.exit)
+
+        self.thread.started.connect(lambda: self.worker.basic_downloader(self.lineEdit.text()))
+        self.thread.start()
+
+    def progressbar_updater(self, progress):
+        self.progressBar.setValue(progress)
 
 
 
